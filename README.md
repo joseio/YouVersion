@@ -4,4 +4,9 @@ This is a tool that enables you to transpose your highlighted verses from one tr
 
 ### How to Use
 
-Clone the repo, navigate to the repo's root directory, type `npm i`, and finally `node TransferHighlights.js`.
+1. Get the latest version of [npm](https://www.npmjs.com/get-npm)
+2. Clone the repo
+3. `cd` to the repo's root directory, using the terminal
+4. Type `npm i` in the terminal to install the requisite package(s)
+5. Type `node TransferHighlights.js` in the terminal
+6. Wait for your highlights to transpose
