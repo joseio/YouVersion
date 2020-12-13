@@ -1,4 +1,4 @@
-# YouVersion Highlight Converter
+# YouVersion Highlight Transposer
 
 This is a tool that enables you to transpose your highlighted verses from one translation to another in the YouVersion Bible app. Bear in mind that this tool is still being worked on and is far from perfect. But I do hope that this tool enables you to finally enjoy other translations with your highlighted verses intact.
 
