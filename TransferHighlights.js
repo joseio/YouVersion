@@ -1,5 +1,6 @@
 const axios = require("axios");
-const AUTH = require("./secret");
+const { AUTH } = require("./secret");
+const process = require("process");
 
 const config = {
   headers: { Authorization: `Bearer ${AUTH}` },
@@ -85,70 +86,86 @@ const MAP_BOOK_CHAPTERS = {
   REV: 22,
 };
 
+// Command line arg for destination translation
+var input = process.argv[2].toUpperCase();
+const dest_translation = MAP_TRANSLATION_VER[input.toUpperCase()];
+if (!dest_translation) {
+  console.log(
+    `Sorry, I don't support the ${input} translation yet. Check the spelling adn try again, or select a different translation.`
+  );
+  return;
+}
+
 // Track failed highlight copies
 var failed = [];
-// Transfer highlgihts from HCSB to NASB2020 for each book of Bible
+// Transfer highlgihts from HCSB to dest_translation for each book of Bible
 Object.keys(MAP_BOOK_CHAPTERS).forEach((book) => {
   // Loop from 1 to n chapters in selected book
   for (var i = 1; i <= MAP_BOOK_CHAPTERS[book]; ++i) {
     let url_get = `https://nodejs.bible.com/api_auth/moments/verse_colors/3.1?usfm=${book}.${i}&version_id=${MAP_TRANSLATION_VER["HCSB"]}`;
     // Initiate highlight request with options request
-    axios.options(OPTIONS_HIGHLIGHT_URL).then(() => {
-      // Get all highlights in book chapter specified below
-      axios
-        .get(url_get, config)
-        .then((res) => {
-          // Return if current chapter has no highlights in HCSB
-          if (res.data.hasOwnProperty("errors")) return;
-
-          // Create arr of axios post requests for later parallelization
-          const post_requests = res.data.verse_colors.map((arr) =>
-            // Create post highlight request
+    axios
+      .options(OPTIONS_HIGHLIGHT_URL)
+      .then(() => {
+        // Get all highlights in book chapter specified below
+        axios
+          .get(url_get, config)
+          .then((res) => {
+            // Return if current chapter has no highlights in HCSB
+            if (res.data.hasOwnProperty("errors")) return;
+            // Create arr of axios post requests for later parallelization
+            const post_requests = res.data.verse_colors.map((arr) =>
+              // Create post highlight request
+              axios
+                .post(
+                  POST_HIGHLIGHT_URL,
+                  {
+                    kind: "highlight",
+                    references: [
+                      {
+                        usfm: [arr[0]],
+                        version_id: dest_translation,
+                      },
+                    ],
+                    color: arr[1],
+                    created_dt: "2020-12-12T22:57:38+00:00",
+                  },
+                  config
+                )
+                // Create option request to update "Moments"
+                // .then(() => axios.options(url_get, config))
+                .catch((error) => {
+                  failed.push(`${book} chapter ${i}`);
+                  console.log(
+                    `Error in posting highlights in ${input}'s ${arr[0]}. Likely connection reset. Possible manual intervention needed`
+                  );
+                })
+            );
             axios
-              .post(
-                POST_HIGHLIGHT_URL,
-                {
-                  kind: "highlight",
-                  references: [
-                    {
-                      usfm: [arr[0]],
-                      version_id: MAP_TRANSLATION_VER["NASB2020"],
-                    },
-                  ],
-                  color: arr[1],
-                  created_dt: "2020-12-12T22:57:38+00:00",
-                },
-                config
-              )
-              // Create option request to update "Moments"
-              .then(() => axios.options(url_get, config))
-              .catch((error) => {
-                failed.push(`${book} chapter ${i}`);
-                console.log(
-                  `Error in posting highlights in NASB2020's ${arr[0]}. Likely connection reset. Possible manual intervention needed`
-                );
-              })
-          );
-          axios
-            .all(post_requests)
-            .then(() => console.log(`Done with ${book} chapter ${i}`))
-            .catch((error) =>
-              console.log("Error in posting highlights in parallel =>", error)
-            );
-        })
-        .catch((error) => {
-          failed.push(`${book} chapter ${i}`);
-          if (i <= MAP_BOOK_CHAPTERS[book])
-            console.log(
-              `Error in getting highlighted verses from HCSB's ${book} chapter ${i}`,
-              error
-            );
-          // Otherwise this is likely a one-off index warning that can be safely ignored
-        });
-    });
+              .all(post_requests)
+              .then(() => console.log(`Done with ${book} chapter ${i}`))
+              .catch((error) =>
+                console.log("Error in posting highlights in parallel =>", error)
+              );
+          })
+          .catch((error) => {
+            failed.push(`${book} chapter ${i}`);
+            if (i <= MAP_BOOK_CHAPTERS[book])
+              console.log(
+                `Error in getting highlighted verses from HCSB's ${book} chapter ${i}`,
+                error
+              );
+            // console.log(error);
+            // Otherwise this is likely a one-off index warning that can be safely ignored
+          });
+      })
+      .catch((error) =>
+        console.log("Error in initiating highligh request", error)
+      );
   }
 });
 
+// Seems this never gets run. Need to replace.
 if (failed.length)
   console.log(
     "Done! However, some highlights require manual intervention: ",
