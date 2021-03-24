@@ -6,7 +6,8 @@ This is a tool that enables you to transpose your highlighted verses from one tr
 
 1. Get the latest version of [npm](https://www.npmjs.com/get-npm)
 2. Clone the repo
-3. `cd` to the repo's root directory, using the terminal
-4. Type `npm i` in the terminal to install the requisite package(s)
-5. Type `node TransferHighlights.js` in the terminal
-6. Wait for your highlights to transpose
+3. Add your authorization token to `secret.js`
+4. `cd` to the repo's root directory, using the terminal
+5. Type `npm i` in the terminal to install the requisite package(s)
+6. Type `node TransferHighlights.js` in the terminal
+7. Wait for your highlights to transpose
