@@ -91,7 +91,7 @@ var input = process.argv[2].toUpperCase();
 const dest_translation = MAP_TRANSLATION_VER[input.toUpperCase()];
 if (!dest_translation) {
   console.log(
-    `Sorry, I don't support the ${input} translation yet. Check the spelling adn try again, or select a different translation.`
+    `Sorry, I don't support the ${input} translation yet. Check the spelling and try again, or select a different translation.`
   );
   return;
 }
